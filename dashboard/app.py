@@ -1,16 +1,3 @@
-"""
-dashboard/app.py
-
-A small Dash app visualizing GridWatch's test run history:
-  - pass/fail trend across recent runs
-  - a table of currently flaky tests
-
-Run with:
-    export DATABASE_URL=postgresql://user:pass@host/dbname   # or sqlite:///local.db
-    python dashboard/app.py
-Then open http://localhost:8050
-"""
-
 from __future__ import annotations
 
 import os
@@ -66,14 +53,81 @@ def build_flaky_table():
     )
 
 
+CARD_STYLE = {
+    "background": "#ffffff",
+    "borderRadius": "10px",
+    "padding": "20px 24px",
+    "boxShadow": "0 1px 4px rgba(0,0,0,0.12)",
+    "flex": "1",
+    "minWidth": "180px",
+}
+
+PAGE_STYLE = {
+    "fontFamily": "'Segoe UI', sans-serif",
+    "background": "#f4f5f7",
+    "minHeight": "100vh",
+    "padding": "32px",
+}
+
+CONTAINER_STYLE = {"maxWidth": "1100px", "margin": "0 auto"}
+
+
+def stat_card(label: str, value: str, accent: str = "#2c3e50"):
+    return html.Div(
+        style=CARD_STYLE,
+        children=[
+            html.Div(label, style={"fontSize": "13px", "color": "#8a8f98", "marginBottom": "8px", "textTransform": "uppercase", "letterSpacing": "0.5px"}),
+            html.Div(value, style={"fontSize": "28px", "fontWeight": "700", "color": accent}),
+        ],
+    )
+
+
+def build_summary_cards():
+    runs = store.recent_runs(limit=100)
+    if not runs:
+        return html.Div("No test runs recorded yet - run pytest and record_test_run.py to get started.")
+
+    latest = runs[0]
+    pass_rate = round((latest.passed / latest.total) * 100, 1) if latest.total else 0
+    flaky_count = len(store.flaky_tests(lookback_runs=10))
+
+    latest_accent = "#E74C3C" if latest.failed > 0 else "#2ECC71"
+    flaky_accent = "#E67E22" if flaky_count > 0 else "#2ECC71"
+
+    return html.Div(
+        style={"display": "flex", "gap": "16px", "flexWrap": "wrap", "marginBottom": "28px"},
+        children=[
+            stat_card("Latest run", f"{latest.passed}/{latest.total} passed", latest_accent),
+            stat_card("Pass rate", f"{pass_rate}%", latest_accent),
+            stat_card("Runs tracked", str(len(runs)), "#2c3e50"),
+            stat_card("Flaky tests", str(flaky_count), flaky_accent),
+        ],
+    )
+
+
 def build_layout():
     return html.Div(
-        style={"fontFamily": "sans-serif", "maxWidth": "1000px", "margin": "0 auto", "padding": "24px"},
+        style=PAGE_STYLE,
         children=[
-            html.H1("GridWatch - Test History"),
-            dcc.Graph(figure=build_trend_figure()),
-            html.H2("Flaky tests (last 10 runs)"),
-            build_flaky_table(),
+            html.Div(
+                style=CONTAINER_STYLE,
+                children=[
+                    html.H1("GridWatch", style={"marginBottom": "2px"}),
+                    html.P("AI-assisted test automation - run history", style={"color": "#8a8f98", "marginTop": 0, "marginBottom": "24px"}),
+                    build_summary_cards(),
+                    html.Div(
+                        style=CARD_STYLE | {"marginBottom": "24px"},
+                        children=[dcc.Graph(figure=build_trend_figure())],
+                    ),
+                    html.Div(
+                        style=CARD_STYLE,
+                        children=[
+                            html.H3("Flaky tests (last 10 runs)", style={"marginTop": 0}),
+                            build_flaky_table(),
+                        ],
+                    ),
+                ],
+            )
         ],
     )
 
