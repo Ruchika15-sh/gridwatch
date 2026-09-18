@@ -9,7 +9,7 @@ Then open http://localhost:8000/docs for interactive API docs.
 
 from fastapi import FastAPI
 
-from app.routers import drivers, sessions
+from app.routers import cooling, drivers, sessions
 
 app = FastAPI(
     title="GridWatch",
@@ -19,6 +19,7 @@ app = FastAPI(
 
 app.include_router(drivers.router)
 app.include_router(sessions.router)
+app.include_router(cooling.router)
 
 
 @app.get("/health", tags=["meta"])

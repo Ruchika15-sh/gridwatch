@@ -96,3 +96,23 @@ class RaceDataGenerator:
             {"driver_code": code, "position": i + 1, "points": points_table[i]}
             for i, code in enumerate(order)
         ]
+
+    def generate_temperatures(self, driver_code: str, total_laps: int = 45) -> list[dict]:
+        """Per-lap component temperature readings. Brakes swing widely lap
+        to lap (heavy braking zones vs straights); engine and ERS are more
+        stable but still vary enough to occasionally cross into WARNING."""
+        rng = random.Random(self._seed + hash(driver_code) % 1000 + 777)
+        brake_components = ["BRAKE_FL", "BRAKE_FR", "BRAKE_RL", "BRAKE_RR"]
+        readings = []
+
+        for lap_num in range(1, total_laps + 1):
+            components = {}
+            for name in brake_components:
+                components[name] = round(380 + rng.uniform(-40, 240), 1)
+            components["ENGINE"] = round(95 + rng.uniform(-8, 38), 1)
+            components["ERS"] = round(40 + rng.uniform(-8, 32), 1)
+
+            readings.append(
+                {"lap_number": lap_num, "driver_code": driver_code, "components": components}
+            )
+        return readings

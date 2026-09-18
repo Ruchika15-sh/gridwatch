@@ -54,3 +54,29 @@ class StandingsEntry(BaseModel):
     driver_code: str
     position: int = Field(..., ge=1)
     points: int = Field(..., ge=0)
+
+
+class Component(str, Enum):
+    BRAKE_FL = "BRAKE_FL"
+    BRAKE_FR = "BRAKE_FR"
+    BRAKE_RL = "BRAKE_RL"
+    BRAKE_RR = "BRAKE_RR"
+    ENGINE = "ENGINE"
+    ERS = "ERS"
+
+
+class TemperatureStatus(str, Enum):
+    NORMAL = "NORMAL"
+    WARNING = "WARNING"
+    CRITICAL = "CRITICAL"
+
+
+class ComponentReading(BaseModel):
+    temperature_celsius: float
+    status: TemperatureStatus
+
+
+class LapTemperatures(BaseModel):
+    lap_number: int
+    driver_code: str
+    components: dict[str, ComponentReading]

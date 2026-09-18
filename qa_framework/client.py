@@ -36,6 +36,12 @@ class GridWatchClient:
     def get_standings(self, year: int, race_name: str, session_type: str):
         return self._client.get(f"/sessions/{year}/{race_name}/{session_type}/standings")
 
+    def get_temperatures(self, year: int, race_name: str, session_type: str, driver_code: str):
+        return self._client.get(
+            f"/sessions/{year}/{race_name}/{session_type}/temperatures",
+            params={"driver_code": driver_code},
+        )
+
     def raw_get(self, path: str, **kwargs):
         """Escape hatch for tests that need to hit a malformed/unusual path directly."""
         return self._client.get(path, **kwargs)
